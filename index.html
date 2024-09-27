@@ -158,7 +158,7 @@
     <div class="currency" id="currency">0 монет</div> <!-- Спочатку 0 монет -->
     <div class="clicks" id="clicksCount">Монет: 0</div>
     <div class="character" onclick="earnCoins()">
-      <img src="mukhtar1.png" alt="Character">
+      <img src="mukhtar1.png" alt="Character" id="characterImage"> <!-- Додаємо id до зображення -->
     </div>
     <div class="profit">
       <span id="profitPerTap">Прибуток за клік: +1</span>
@@ -184,6 +184,20 @@
     // Рівні та відповідна кількість монет для підвищення
     const levels = [100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000];
 
+    // Додаємо масив зображень для кожного рівня
+    const characterImages = [
+      'mukhtar1.png', // Рівень 1
+      'mukhtar2.png', // Рівень 2
+      'mukhtar3.png', // Рівень 3
+      'mukhtar4.jpeg', // Рівень 4
+      'mukhtar5.jpeg', // Рівень 5
+      'mukhtar6.jpeg', // Рівень 6
+      'mukhtar7.jpeg', // Рівень 7
+      'mukhtar8.jpeg', // Рівень 8
+      'mukhtar9.jpeg', // Рівень 9
+      'mukhtar10.jpeg' // Рівень 10
+    ];
+
     // Function to load user data
     function loadUser() {
       if (!currentUser) {
@@ -208,73 +222,71 @@
       document.getElementById('currency').textContent = user.coins + ' монет'; // Відображення монет
       document.getElementById('clicksCount').textContent = "Монет: " + user.coins; // Відображення кількості монет
 
-      // Оновлюємо прибуток за клік в залежності від рівня
-      coinsPerClick = user.level; // Кількість монет за клік дорівнює рівню
-      document.getElementById('profitPerTap').textContent = "Прибуток за клік: +" + coinsPerClick; // Оновлення прибутку за клік
-
-      updateLevelProgress(user); // Оновлюємо прогрес до наступного рівня
+      // Оновлюємо зображення персонажа в залежності від рівня
+      document.getElementById('characterImage').src = characterImages[user.level - 1];
+      
+      updateProgressBar(user); // Оновлюємо прогресбар
     }
 
-    function earnCoins() {
-      if (!isGameStarted) return; // Якщо гра не почалась, не робимо нічого
-
-      currentUser.coins += coinsPerClick; // Додаємо монети
-      showAnimation(coinsPerClick); // Показуємо анімацію
-      updateUser(); // Оновлюємо дані користувача в localStorage
-
-      document.getElementById('currency').textContent = currentUser.coins + ' монет'; // Оновлюємо відображення монет
-      document.getElementById('clicksCount').textContent = "Монет: " + currentUser.coins; // Оновлюємо відображення кількості монет
-
-      // Оновлюємо прогрес до наступного рівня
-      updateLevelProgress(currentUser);
+    // Function to start the game
+    function startGame() {
+      isGameStarted = true; // Встановлюємо прапорець, що гра почалась
+      document.getElementById('startButton').style.display = 'none'; // Ховаємо кнопку старту
     }
 
-    // Функція для показу анімації
-    function showAnimation(amount) {
-      const animation = document.getElementById('animation');
-      animation.textContent = '+' + amount; // Текст анімації
-      animation.style.opacity = 1; // Показуємо анімацію
-      animation.style.transform = 'translateY(-20px)'; // Піднімаємо текст
-      setTimeout(() => {
-        animation.style.opacity = 0; // Сховуємо анімацію
-        animation.style.transform = 'translateY(0)'; // Скидаємо позицію
-      }, 1000);
+    // Fadnction to earn coins
+    // Функція для заробляння монет
+  function earnCoins() {
+    if (!isGameStarted) return; // Якщо гра не почалась, виходимо з функції
+
+    // Змінюємо прибуток за клік в залежності від рівня
+    const coinsPerClick = currentUser.level; // Прибуток за клік = рівень користувача
+    currentUser.coins += coinsPerClick; // Додаємо монети
+    document.getElementById('animation').textContent = '+' + coinsPerClick; // Відображення прибутку
+    document.getElementById('animation').style.opacity = 1; // Показуємо анімацію
+    document.getElementById('animation').style.transform = 'translateY(-30px)'; // Піднімаємо анімацію
+
+    // Анімація
+    setTimeout(() => {
+      document.getElementById('animation').style.opacity = 0; // Сховати анімацію
+      document.getElementById('animation').style.transform = 'translateY(0)'; // Повертаємо анімацію на місце
+    }, 1000); // Затримка 1 секунда
+
+    localStorage.setItem('user', JSON.stringify(currentUser)); // Зберігаємо дані користувача
+    displayUser(currentUser); // Оновлюємо відображення користувача
+    checkLevelUp(); // Перевіряємо, чи підвищився рівень
+  }
+
+
+    // Function to check for level up
+    function checkLevelUp() {
+      if (currentUser.level <= levels.length && currentUser.coins >= levels[currentUser.level - 1]) {
+        currentUser.level++; // Підвищуємо рівень
+        localStorage.setItem('user', JSON.stringify(currentUser)); // Зберігаємо дані користувача
+        displayUser(currentUser); // Оновлюємо відображення користувача
+      }
+      updateProfitPerTap();
     }
-
-    function updateUser() {
-      localStorage.setItem('user', JSON.stringify(currentUser)); // Оновлюємо дані користувача в localStorage
+    function updateProfitPerTap() {
+    const coinsPerClick = currentUser.level; // Прибуток за клік = рівень користувача
+    document.getElementById('profitPerTap').textContent = `Прибуток за клік: +${coinsPerClick}`;
     }
+    // Function to update progress bar
+    function updateProgressBar(user) {
+      const currentLevel = user.level;
+      const nextLevel = currentLevel < levels.length ? levels[currentLevel - 1] : null;
 
-    function updateLevelProgress(user) {
-      const currentLevel = user.level - 1; // Текущий рівень
-      const progress = user.coins / levels[currentLevel] * 100; // Прогрес у відсотках
-      document.getElementById('progressBar').style.width = progress + '%'; // Оновлюємо ширину прогресу
-      document.getElementById('levelProgress').textContent = 'Прогрес до наступного рівня: ' + user.coins + '/' + levels[currentLevel]; // Оновлюємо текст прогресу
-
-      // Перевіряємо, чи потрібно підвищити рівень
-      if (user.coins >= levels[currentLevel]) {
-        user.level += 1; // Підвищуємо рівень
-        updateUser(); // Оновлюємо користувача
-        displayUser(user); // Оновлюємо відображення користувача
+      if (nextLevel) {
+        const progress = (user.coins / nextLevel) * 100; // Розрахунок прогресу
+        document.getElementById('progressBar').style.width = progress + '%'; // Оновлення ширини прогресбару
+        document.getElementById('levelProgress').textContent = `Прогрес до наступного рівня: ${user.coins}/${nextLevel}`; // Відображення прогресу
+      } else {
+        document.getElementById('levelProgress').textContent = 'Максимальний рівень досягнуто!'; // Відображення, якщо досягнуто максимального рівня
       }
     }
 
-    function startGame() {
-      isGameStarted = true; // Позначаємо, що гра почалась
-      document.getElementById('startButton').style.display = 'none'; // Сховуємо кнопку старту
-      loadUser(); // Завантажуємо дані користувача
-    }
-
-    function showFriends() {
-      alert('Ця функція ще не реалізована.'); // Інформаційне повідомлення
-    }
-
-    function showSettings() {
-      alert('Ця функція ще не реалізована.'); // Інформаційне повідомлення
-    }
-
-    loadUser(); // Завантажуємо дані користувача
+    // Запускаємо гру при завантаженні
+    loadUser();
   </script>
 </body>
 </html>
-
