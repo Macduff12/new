@@ -149,7 +149,7 @@
 <body>
   <div class="top-bar">
     <div class="player-info">
-      <div class="player-name" id="playerName">Mukhtar</div>
+      <div class="player-name" id="playerName">Mukhtar Clicker</div>
       <div class="level" id="playerLevel">Рівень 1/10</div>
     </div>
   </div>
@@ -176,13 +176,6 @@
   <div class="buttons">
     <button id="startButton" onclick="startGame()">Натисніть Старт</button>
   </div>
-
-  <nav>
-    <a href="#" onclick="showFriends()">Друзі</a>
-    <a href="#" onclick="showSettings()">Налаштування</a>
-    <a href="about.html">Про нас</a>
-    <a href="contact.html">Контакти</a>
-  </nav>
 
   <script>
     let currentUser = JSON.parse(localStorage.getItem('user')) || null; // Отримуємо користувача з localStorage
