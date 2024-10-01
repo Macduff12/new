@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meduza Tapper</title>
+    <style>
+        /* Основні стилі */
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(to bottom, #0077be, #0099cc, #00b3e3); /* Морські кольори */
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            font-family: 'Arial', sans-serif;
+            color: white;
+        }
+
+        .container {
+            padding: 20px;
+            width: 100%;
+            max-width: 600px;
+            box-sizing: border-box;
+            background: rgba(0, 0, 0, 0.7); /* Напівпрозорий фон */
+            border-radius: 15px;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+            position: relative; /* Для абсолютного позиціонування шкали */
+        }
+
+        .score {
+            font-size: 64px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .score.clicked {
+            transform: scale(1.1); /* Анімація збільшення */
+        }
+
+        .rank {
+            font-size: 20px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .central-icon {
+            background-color:  #0099cc; /* Зелене світло */
+            width: 150px; /* Збільшена іконка */
+            height: 150px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px auto;
+            box-shadow: 0 0 20px rgba(25, 39, 142, 0.894); /* Світіння навколо */
+            transition: transform 0.3s ease;
+        }
+
+        .central-icon.clicked {
+            transform: rotate(360deg); /* Анімація обертання */
+        }
+
+        .central-icon img {
+            width: 100px; /* Збільшений розмір медузи */
+        }
+
+        /* Прогрес-бар внизу */
+        .energy-container {
+            width: 100%;
+            max-width: 600px;
+            margin: 20px 0; /* Відстань зверху */
+            position: relative; /* Для абсолютного позиціонування тексту */
+        }
+
+        .energy-level {
+            font-size: 24px;
+            color: #fff; /* Жовтий колір для енергії */
+            margin-bottom: 5px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center; /* Центрування тексту */
+        }
+
+        .energy-icon {
+            width: 30px; /* Розмір іконки енергії */
+            margin-left: 5px;
+        }
+
+        .progress-container {
+            width: 100%;
+            background-color: #555;
+            border-radius: 20px;
+            height: 25px;
+            overflow: hidden;
+        }
+
+        .energy-progress-bar {
+            height: 100%;
+            background-color: #00b3e3; /* Морський колір для шкали енергії */
+            width: 0;
+            transition: width 0.3s ease;
+        }
+
+        /* Бокс з друзями та заробітками */
+        .info-box {
+            display: flex;
+            justify-content: space-between; /* Вирівнювання по краях */
+            margin-top: 20px;
+            background: url('ocean-background.jpg') no-repeat center center; /* Фонове зображення */
+            background-size: cover; /* Підгонка зображення */
+            padding: 10px;
+            border-radius: 10px;
+            width: 100%;
+            max-width: 600px;
+            color: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            flex-direction: column; /* Вертикальне розташування */
+            text-align: center;
+        }
+
+        .info-item img {
+            width: 40px; /* Розмір іконок */
+            height: 40px;
+            margin-bottom: 5px;
+        }
+
+        /* Адаптивність під мобільні пристрої */
+        @media (max-width: 600px) {
+            .central-icon {
+                width: 120px;
+                height: 120px;
+            }
+
+            .central-icon img {
+                width: 80px;
+            }
+
+            .score {
+                font-size: 48px;
+            }
+
+            .rank {
+                font-size: 16px;
+            }
+
+            .energy-level {
+                font-size: 18px;
+            }
+
+            .progress-container {
+                height: 15px;
+            }
+
+            .info-box {
+                padding: 5px;
+            }
+
+            .info-item img {
+                width: 30px;
+                height: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Лічильник кліків -->
+        <div class="score" id="clickCounter">0</div>
+
+        <div class="rank" id="userRank">Level 1</div>
+
+        <div class="central-icon" id="clickableIcon" onclick="handleClick()">
+            <img src="meduza.png" alt="Meduza Icon"> <!-- Іконка медузи -->
+        </div>
+    </div>
+
+    <!-- Прогрес-бар енергії -->
+    <div class="energy-container">
+        <div class="energy-level" id="energyLevel">
+            Energy 
+            <img src="energy.png" alt="Energy Icon" class="energy-icon"> <!-- Іконка енергії -->
+        </div>
+        <div class="progress-container">
+            <div class="energy-progress-bar" id="energyProgressBar"></div>
+        </div>
+    </div>
+
+    <!-- Бокс з друзями та заробітками -->
+    <div class="info-box">
+        <div class="info-item">
+            <img src="friend.png" alt="Friend Icon"> <!-- Іконка друзів -->
+            <span>Friends</span>
+        </div>
+        <div class="info-item">
+            <img src="earn.png" alt="Earn Icon"> <!-- Іконка заробітку -->
+            <span>Earn</span>
+        </div>
+        <div class="info-item">
+            <img src="boosts.png" alt="Boosts Icon"> <!-- Іконка підсилювачів -->
+            <span>Boosts</span>
+        </div>
+    </div>
+
+    <script>
+        // Лічильник для кліків та енергії
+        let clickCount = localStorage.getItem('clickCount') ? parseInt(localStorage.getItem('clickCount')) : 0;
+        let energyCount = localStorage.getItem('energyCount') ? parseInt(localStorage.getItem('energyCount')) : 5000; // Початкова енергія 5000
+        const energyLimit = 5000; // Максимальна кількість енергії
+        const energyRechargeRate = 1; // Розмір відновлення енергії за секунду
+
+        const counterElement = document.getElementById('clickCounter');
+        const iconElement = document.getElementById('clickableIcon');
+        const energyLevel = document.getElementById('energyLevel');
+        const energyProgressBar = document.getElementById('energyProgressBar');
+        const userRank = document.getElementById('userRank');
+
+        // Ініціалізація відображення при завантаженні сторінки
+        updateUI();
+        setInterval(rechargeEnergy, 1000); // Відновлювати енергію кожну секунду
+
+        function handleClick() {
+            // Перевіряємо, чи достатньо енергії для кліку
+            if (energyCount > 0) {
+                // Додаємо клас анімації
+                iconElement.classList.add('clicked');
+                counterElement.classList.add('clicked');
+
+                // Після завершення анімації збільшуємо кількість очок і зменшуємо енергію
+                setTimeout(() => {
+                    clickCount++; // Збільшуємо лічильник
+                    energyCount--; // Зменшуємо енергію
+                    localStorage.setItem('clickCount', clickCount); // Зберігаємо в localStorage
+                    localStorage.setItem('energyCount', energyCount); // Зберігаємо в localStorage
+                    updateUI(); // Оновлюємо інтерфейс
+                    iconElement.classList.remove('clicked'); // Видаляємо клас анімації
+                    counterElement.classList.remove('clicked'); // Видаляємо клас анімації
+                }, 300); // Час анімації
+            } else {
+                alert("Not enough energy!"); // Повідомлення про недостатню енергію
+            }
+        }
+
+        function updateUI() {
+            counterElement.innerText = clickCount; // Оновлення лічильника
+            energyLevel.innerText = `Energy ${energyCount}/${energyLimit}`; // Оновлення енергії
+            energyProgressBar.style.width = `${(energyCount / energyLimit) * 100}%`; // Оновлення прогрес-бару
+            userRank.innerText = `Level ${Math.floor(clickCount / 10) + 1}`; // Оновлення рівня
+        }
+
+        function rechargeEnergy() {
+            if (energyCount < energyLimit) {
+                energyCount += energyRechargeRate; // Відновлюємо енергію
+                if (energyCount > energyLimit) {
+                    energyCount = energyLimit; // Обмежуємо до максимального значення
+                }
+                localStorage.setItem('energyCount', energyCount); // Зберігаємо в localStorage
+                updateUI(); // Оновлюємо інтерфейс
+            }
+        }
+    </script>
+</body>
+</html>
