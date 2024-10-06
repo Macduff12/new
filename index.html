@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="uk">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,7 +10,8 @@
         body {
             margin: 0;
             padding: 0;
-            background: linear-gradient(to bottom, #0077be, #0099cc, #00b3e3); /* Морські кольори */
+            background: url('background.jpg.webp') no-repeat center center fixed; /* Додаємо фон */
+            background-size: cover; /* Займає всю площу */
             height: 100vh;
             display: flex;
             flex-direction: column;
@@ -54,8 +55,15 @@
             font-weight: bold;
         }
 
+        .next-level {
+            font-size: 18px;
+            margin-top: 10px;
+            font-weight: bold;
+            color: #00b3e3;
+        }
+
         .central-icon {
-            background-color: #0099cc;
+            background-color: rgba(0, 153, 204, 0.5); /* Зроблено прозорим */
             width: 150px;
             height: 150px;
             border-radius: 50%;
@@ -64,15 +72,36 @@
             align-items: center;
             margin: 20px auto;
             box-shadow: 0 0 20px rgba(25, 39, 142, 0.894);
-            transition: transform 0.3s ease;
+            transition: transform 0.2s ease-in-out;
+            position: relative;
         }
 
         .central-icon.clicked {
-            transform: rotate(360deg);
+            transform: scale(0.9); /* Прогинання при кліку */
         }
 
         .central-icon img {
             width: 300px;
+        }
+
+        /* Анімація для спливаючого тексту */
+        .popup-text {
+            position: absolute;
+            color: #00ff00;
+            font-size: 30px;
+            font-weight: bold;
+            animation: popup 1s ease-out forwards;
+        }
+
+        @keyframes popup {
+            0% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
         }
 
         /* Блок інформації */
@@ -98,6 +127,17 @@
             width: 40px; /* Розмір іконок */
             height: 40px;
             margin-bottom: 5px;
+        }
+
+        .info-item a {
+            text-decoration: none;
+            color: white;
+            font-weight: bold;
+            transition: color 0.3s ease;
+        }
+
+        .info-item a:hover {
+            color: #00b3e3;
         }
 
         /* Прогрес-бар внизу */
@@ -186,18 +226,18 @@
         <!-- Лічильник кліків -->
         <div class="score" id="clickCounter">0</div>
 
-        <div class="rank" id="userRank">Level 1</div>
+        <div class="rank" id="userRank">Рівень 1</div>
+        <div class="next-level" id="nextLevelInfo"></div>
 
         <div class="central-icon" id="clickableIcon" onclick="handleClick()">
-            <img src="meduza.png" alt="Meduza Icon" > <!-- Іконка медузи -->
+            <img src="meduza.png" alt="Meduza Icon"> <!-- Іконка медузи -->
         </div>
     </div>
-
 
     <!-- Прогрес-бар енергії -->
     <div class="energy-container">
         <div class="energy-level" id="energyLevel">
-            Energy 
+            Енергія 
             <img src="energy.png" alt="Energy Icon" class="energy-icon"> <!-- Іконка енергії -->
         </div>
         <div class="progress-container">
@@ -205,20 +245,19 @@
         </div>
     </div>
 
-
     <!-- Блок інформації (друзі, заробітки тощо) -->
     <div class="info-box">
         <div class="info-item">
             <img src="friend.png" alt="Friend Icon"> <!-- Іконка друзів -->
-            <span>Friends</span>
+            <a href="#friends">Друзі</a> <!-- Посилання -->
         </div>
         <div class="info-item">
             <img src="earn.png" alt="Earn Icon"> <!-- Іконка заробітку -->
-            <span>Earn</span>
+            <a href="#earn">Заробіток</a> <!-- Посилання -->
         </div>
         <div class="info-item">
             <img src="boosts.png" alt="Boosts Icon"> <!-- Іконка підсилювачів -->
-            <span>Boosts</span>
+            <a href="boosts.html">Підсилювачі</a> <!-- Посилання -->
         </div>
     </div>
 
@@ -226,59 +265,74 @@
         // Лічильник для кліків та енергії
         let clickCount = localStorage.getItem('clickCount') ? parseInt(localStorage.getItem('clickCount')) : 0;
         let energyCount = localStorage.getItem('energyCount') ? parseInt(localStorage.getItem('energyCount')) : 5000; // Початкова енергія 5000
-        const energyLimit = 5000; // Максимальна кількість енергії
-        const energyRechargeRate = 1; // Розмір відновлення енергії за секунду
-
-        const counterElement = document.getElementById('clickCounter');
-        const iconElement = document.getElementById('clickableIcon');
-        const energyLevel = document.getElementById('energyLevel');
+        const energyLimit = 10000; // Максимальна енергія
+        const clickCounter = document.getElementById('clickCounter');
         const energyProgressBar = document.getElementById('energyProgressBar');
         const userRank = document.getElementById('userRank');
+        const nextLevelInfo = document.getElementById('nextLevelInfo');
+        const energyLevel = document.getElementById('energyLevel');
 
-        // Ініціалізація відображення при завантаженні сторінки
-        updateUI();
-        setInterval(rechargeEnergy, 1000); // Відновлювати енергію кожну секунду
+        // Визначаємо пороги для кожного рівня
+        const levelThresholds = [5000, 20000, 40000, 60000, 80000]; // Задайте пороги для рівнів
+        const maxLevel = levelThresholds.length; // Максимальний рівень
 
+        // Функція для оновлення енергії
+        function updateEnergyProgress() {
+            const percentage = (energyCount / energyLimit) * 100;
+            energyProgressBar.style.width = `${percentage}%`;
+
+            // Оновлення тексту енергії
+            energyLevel.textContent = `Енергія: ${energyCount}`;
+
+            // Перевірка на максимальну енергію
+            if (energyCount >= energyLimit) {
+                energyCount = energyLimit; // Обмеження енергії
+            }
+        }
+
+        // Функція для обробки кліку
         function handleClick() {
-            // Перевіряємо, чи достатньо енергії для кліку
+            clickCount++;
+            clickCounter.textContent = clickCount;
+
+            // Випадкова анімація
+            const icon = document.getElementById('clickableIcon');
+            icon.classList.add('clicked');
+
+            // Показ спливаючого тексту
+            const popupText = document.createElement('div');
+            popupText.className = 'popup-text';
+            popupText.textContent = '+1';
+            icon.appendChild(popupText);
+            setTimeout(() => {
+                popupText.remove();
+            }, 1000);
+
+            // Зберігання кліків в localStorage
+            localStorage.setItem('clickCount', clickCount);
+            updateNextLevelInfo();
+
+            // Оновлення енергії
             if (energyCount > 0) {
-                // Додаємо клас анімації
-                iconElement.classList.add('clicked');
-                counterElement.classList.add('clicked');
-
-                // Після завершення анімації збільшуємо кількість очок і зменшуємо енергію
-                setTimeout(() => {
-                    clickCount++; // Збільшуємо лічильник кліків
-                    energyCount -= 10; // Витрачаємо енергію
-                    localStorage.setItem('clickCount', clickCount); // Зберігаємо в локальному сховищі
-                    localStorage.setItem('energyCount', energyCount); // Зберігаємо в локальному сховищі
-                    updateUI(); // Оновлюємо інтерфейс
-                    iconElement.classList.remove('clicked'); // Знімаємо клас після анімації
-                    counterElement.classList.remove('clicked');
-                }, 300); // Тривалість анімації
-            } else {
-                alert('Not enough energy!');
+                energyCount -= 1; // Витрата енергії за клік
+                updateEnergyProgress();
             }
         }
 
-        function updateUI() {
-            counterElement.innerText = clickCount; // Оновлюємо лічильник
-            energyLevel.innerText = `Energy: ${energyCount}`;
-            energyProgressBar.style.width = `${(energyCount / energyLimit) * 100}%`; // Оновлюємо прогрес-бар
-            userRank.innerText = `Level ${Math.floor(clickCount / 10) + 1}`; // Рівень залежить від кількості кліків
+        // Оновлення інформації про рівень
+        function updateNextLevelInfo() {
+            const level = levelThresholds.findIndex(threshold => clickCount < threshold); // Знаходимо рівень
+            userRank.textContent = `Рівень ${level + 1}`;
+            const clicksToNextLevel = level < maxLevel ? levelThresholds[level] - clickCount : 0;
+            nextLevelInfo.textContent = `Наступний рівень через ${clicksToNextLevel} кліків`; // Відображення, скільки кліків залишилось до наступного рівня
         }
 
-        function rechargeEnergy() {
-            if (energyCount < energyLimit) {
-                energyCount += energyRechargeRate; // Відновлюємо енергію
-                if (energyCount > energyLimit) {
-                    energyCount = energyLimit; // Обмежуємо до максимальної енергії
-                }
-                localStorage.setItem('energyCount', energyCount); // Зберігаємо в локальному сховищі
-                updateUI(); // Оновлюємо інтерфейс
-            }
-        }
+        // Ініціалізація прогресу при завантаженні
+        window.onload = function() {
+            clickCounter.textContent = clickCount;
+            updateEnergyProgress();
+            updateNextLevelInfo();
+        };
     </script>
 </body>
 </html>
-

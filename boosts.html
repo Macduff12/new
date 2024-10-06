@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Підсилювачі - Meduza Tapper</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* Основні стилі */
+        body {
+            margin: 0;
+            padding: 0;
+            background: url('background.jpg.webp') no-repeat center center fixed; /* Додайте ваше фонове зображення */
+            background-size: cover; /* Налаштування для покриття */
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center; /* Центруємо контент вертикально */
+            align-items: center;
+            text-align: center;
+            font-family: 'Roboto', sans-serif;
+            color: #fff;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .container {
+            padding: 20px;
+            width: 100%;
+            max-width: 600px;
+            box-sizing: border-box;
+            background: rgba(10, 20, 30, 0.8); /* Злегка затемнене тло */
+            border-radius: 15px;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.7);
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .score {
+            font-size: 64px;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.5);
+            animation: bounce 1s infinite alternate;
+        }
+
+        @keyframes bounce {
+            from {
+                transform: translateY(0);
+            }
+            to {
+                transform: translateY(-10px);
+            }
+        }
+
+        .boost-button {
+            padding: 15px 25px;
+            background-color: rgba(0, 123, 255, 0.3); /* Прозорий синій колір для кнопок */
+            border: 2px solid #007BFF; /* Обводка */
+            border-radius: 10px;
+            color: white;
+            font-size: 22px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s, box-shadow 0.3s;
+            margin: 10px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .boost-button:hover {
+            background-color: rgba(0, 123, 255, 0.5); /* Темніший прозорий синій колір при наведенні */
+            transform: scale(1.05);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .info {
+            margin-top: 20px;
+            font-size: 20px;
+            color: #ffffff;
+            text-shadow: 1px 1px 8px rgba(0, 0, 0, 0.5);
+        }
+
+        .back-button {
+            padding: 15px 25px;
+            background-color: rgba(255, 111, 0, 0.3); /* Прозорий яскраво-оранжевий колір для кнопки "Назад" */
+            border: 2px solid #ff6f00; /* Обводка */
+            border-radius: 50px; /* Зроблено круглою */
+            color: white;
+            font-size: 22px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .back-button:hover {
+            background-color: rgba(255, 111, 0, 0.5); /* Темніший відтінок оранжевого */
+            transform: translateY(-5px); /* Піднімемо кнопку при наведенні */
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+            animation: pulse 1s infinite; /* Додаємо пульсацію */
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        /* Анімації медуз */
+        .jellyfish {
+            position: absolute;
+            bottom: 100px; /* Вирівнюємо медузу */
+            left: 10%;
+            transform: translateX(-50%);
+            animation: swim 8s ease-in-out infinite;
+            width: 200px; /* Зміна ширини медузи */
+        }
+
+        @keyframes swim {
+            0% {
+                transform: translateX(-50%) translateY(0);
+            }
+            50% {
+                transform: translateX(-50%) translateY(-20px);
+            }
+            100% {
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    
+    <div class="container">
+        <div class="score" id="clickCounter">0 Кліків</div>
+        <button class="boost-button" id="buyBoost1">Купити +1 Клік (2000 кліків)</button>
+        <button class="boost-button" id="buyBoost2">Купити +2 Кліки (3000 кліків)</button>
+        <button class="boost-button" id="buyBoost3">Купити +5 Кліків (5000 кліків)</button>
+        <button class="boost-button" id="buyBoost4">Купити +10 Кліків (10000 кліків)</button>
+        <button class="back-button" id="backButton">Назад</button>
+    </div>
+
+    <img src="medusa3.png" alt="Медуза" class="jellyfish" /> <!-- Перша медуза -->
+
+    <script>
+        // Ініціалізація балансу монет та кліків
+        let clickCount = localStorage.getItem('clickCount') ? parseInt(localStorage.getItem('clickCount')) : 0;
+        let coinCount = localStorage.getItem('coinCount') ? parseInt(localStorage.getItem('coinCount')) : 100; // Початковий баланс монет
+
+        // Оновлюємо відображення
+        function updateDisplay() {
+            document.getElementById('clickCounter').innerText = clickCount + " Кліків";
+            document.getElementById('coinBalance').innerText = "Монети: " + coinCount;
+        }
+
+        // Купівля підсилювача
+        function buyBoost(boostAmount, boostPrice) {
+            if (clickCount >= boostPrice) {
+                clickCount -= boostPrice; // Витрачаємо кліки
+                localStorage.setItem('clickCount', clickCount);
+                updateDisplay();
+                alert("Ви купили +" + boostAmount + " кліків!");
+            } else {
+                alert("Недостатньо кліків для купівлі! У вас є " + clickCount + " кліків.");
+            }
+        }
+
+        document.getElementById('buyBoost1').addEventListener('click', function() {
+            buyBoost(1, 2000);
+        });
+
+        document.getElementById('buyBoost2').addEventListener('click', function() {
+            buyBoost(2, 3000);
+        });
+
+        document.getElementById('buyBoost3').addEventListener('click', function() {
+            buyBoost(5, 5000);
+        });
+
+        document.getElementById('buyBoost4').addEventListener('click', function() {
+            buyBoost(10, 10000);
+        });
+
+        // Кнопка "Назад"
+        document.getElementById('backButton').addEventListener('click', function() {
+            window.history.back(); // Повертаємось на попередню сторінку
+        });
+
+        // Оновлення відображення при завантаженні
+        updateDisplay();
+    </script>
+</body>
+</html>
